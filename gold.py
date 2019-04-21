@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup as bs
 import xlrd
 import csv
 from datetime import datetime
+import matplotlib.pyplot as plt
+import pandas as pd
 
 # Open up the necessary page of the bank's site
 def get_html(url):
@@ -18,7 +20,7 @@ def get_html(url):
 
 html = get_html("http://data.sberbank.ru/moscow/ru/quotes/archivoms/?base=beta")
 
-# Open the first file in the files list
+# Download the first xls file in the files list
 if html:
     soup = bs(html, "html.parser")
     raw_script = soup.find("div", {'class': "layout-column"}).find('script').contents[0]
@@ -32,23 +34,31 @@ if html:
     date_from_link = datetime.date(date_from_link)
     print(date_from_link)
 
-# Retrieve value from the first sheet and the necessary cell
+# Retrieve the current gold bar value from the necessary cell of the first sheet
     open('gold.xls', 'wb').write(raw_file.content)
     book = xlrd.open_workbook("gold.xls", encoding_override="cp1252")
     sheet = book.sheet_by_index(0)
     new_price = int(sheet.cell_value(11, 3))
 
-# Substract the new price from the purchase price and express it as percent
+# Substract the current price from the purchase price and express it as percent
     old_price = 31341
     percentage = int(((new_price - old_price)*100)/old_price)
     print(f"{new_price} - 31341 = {int(new_price - old_price)} rub., {percentage}%")
 
+# Write the date and the current price into a csv file
 data = [{'date': date_from_link, 'old_price': old_price, 'new_price': new_price, 'percentage': percentage}]
 with open("gold.csv", "a", encoding = "cp1251", newline = "") as f:
     fieldnames = ["date", "old_price", "new_price", "percentage"]
     writer = csv.DictWriter(f, fieldnames, delimiter = ";")
-    #writer.writeheader()
+# If the date and the price are already in the file, skip it
     for row in data:
-        writer.writerow(row)
-
-# Matplotlib
+        if row in data:
+            continue
+        else:
+            writer.writerow(row)
+            
+# Show the graphs with the current price value and the old price value (Jupyter) using data from csv file
+    dataframe = pd.read_csv('gold.csv', sep=';')
+    dataframe.drop_duplicates('date')
+    plt.plot(dataframe['date'], dataframe['old_price'])
+    plt.plot(dataframe['date'], dataframe['new_price'])
