@@ -48,7 +48,7 @@ if contents:
     # Check if current date and price are already kept the csv file (if script is run several times a day)
     date_list = []
     with open("gold.csv", "r", encoding = "cp1251") as file:
-        reader = csv.DictReader(file, delimiter = ";")
+        reader = csv.DictReader(file, delimiter = ",")
         for line in reader:
             date_list.append(line['date'])
     # Write down current date and price into a csv file if they are new to the file
