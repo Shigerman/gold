@@ -12,9 +12,9 @@ Gold (Золото)
 
 
 Используемые инструменты и модули:
+---------
 ```
     Python, Requests, Pandas, Matplotlib, Json, JupyterNotebook
-
 ```
 
 Запуск скрипта
@@ -32,4 +32,3 @@ Aктивируйте виртуальное окружение:
 
 ```
     jupyter notebook
-=======
