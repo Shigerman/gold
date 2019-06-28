@@ -4,3 +4,5 @@ __pycache__/
 *.log
 env/
 logdist.txt
+gold.xls
+.ipynb_checkpoints
