@@ -56,11 +56,11 @@ if contents:
         data = {'date': date_from_link, 'old_price': old_price, 'new_price': new_price, 'percentage': percentage}
         with open("gold.csv", "a", encoding = "cp1251", newline = "") as f:
             fieldnames = ["date", "old_price", "new_price", "percentage"]
-            writer = csv.DictWriter(f, fieldnames, delimiter = ";")
+            writer = csv.DictWriter(f, fieldnames, delimiter = ",")
             writer.writerow(data)
             
     # Show the graphs with the current price value and the old price value (in Jupyter) using data from csv file
-    dataframe = pd.read_csv('gold.csv', sep=';')
+    dataframe = pd.read_csv('gold.csv', sep=',')
     dataframe.drop_duplicates('date')
     plt.plot(dataframe['date'], dataframe['old_price'])
     plt.plot(dataframe['date'], dataframe['new_price'])
