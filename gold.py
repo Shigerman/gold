@@ -19,7 +19,7 @@ def get_url(url):
 
 
 # Open up the necessary page of the bank's site
-contents = get_url("https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month=5&year=2019")
+contents = get_url("https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month=6&year=2019")
 
 # Download the latest published xls file with prices
 if contents:
@@ -41,9 +41,9 @@ if contents:
     new_price = int(sheet.cell_value(11, 3))
 
     # Substract the current price from the purchase price and express it as a sum of money and percent
-    old_price = 31341
-    percentage = int(((new_price - old_price)*100)/old_price)
-    print(f"{new_price} - 31341 = {int(new_price - old_price)} rub., {percentage}%")
+    OLD_PRICE = 31341
+    percentage = int(((new_price - OLD_PRICE)*100)/OLD_PRICE)
+    print(f"{new_price} - 31341 = {int(new_price - OLD_PRICE)} rub., {percentage}%")
 
     # Check if current date and price are already kept the csv file (if script is run several times a day)
     date_list = []
@@ -53,7 +53,7 @@ if contents:
             date_list.append(line['date'])
     # Write down current date and price into a csv file if they are new to the file
     if date_list[-1] != str(date_from_link):
-        data = {'date': date_from_link, 'old_price': old_price, 'new_price': new_price, 'percentage': percentage}
+        data = {'date': date_from_link, 'old_price': OLD_PRICE, 'new_price': new_price, 'percentage': percentage}
         with open("gold.csv", "a", encoding = "cp1251", newline = "") as f:
             fieldnames = ["date", "old_price", "new_price", "percentage"]
             writer = csv.DictWriter(f, fieldnames, delimiter = ",")
