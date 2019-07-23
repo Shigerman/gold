@@ -7,6 +7,14 @@ import pandas as pd
 import requests
 import xlrd
 
+# Compile the address where to get the necesssary link from.
+# The address changes depending on current month and year, months begin from 0. It compiles from 4 strings.
+address_start = "https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month="
+date = str(datetime.today())
+month = int(date[5:7]) - 1
+year = date[0:4]
+address = address_start + str(month) + '&year=' + year
+
 # Secure from the non-operating site
 def get_url(url):
     try:
@@ -17,9 +25,8 @@ def get_url(url):
         print("сетевая ошибка")
         return False
 
-
-# Open up the necessary page of the bank's site
-contents = get_url("https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month=6&year=2019")
+# Open up the necessary address of the bank's site
+contents = get_url(address)
 
 # Download the latest published xls file with prices
 if contents:
