@@ -1,6 +1,6 @@
 # Get the current price of a 10-gram gold bar from the bank site and compare it to the purchase price
 import csv
-from datetime import datetime
+from datetime import date
 import json
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -10,9 +10,11 @@ import xlrd
 # Compile the address where to get the necesssary link from.
 # The address changes depending on current month and year, months begin from 0. It compiles from 4 strings.
 address_start = "https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month="
-date = str(datetime.today())
-month = int(date[5:7]) - 1
-year = date[0:4]
+date = date.today()
+date_string = date.strftime('%d.%m.%Y')
+month = date_string[3:5]
+month = int(month) - 1
+year = date_string[6:10]
 address = address_start + str(month) + '&year=' + year
 
 # Secure from the non-operating site
@@ -34,14 +36,8 @@ if contents:
     part_of_the_link = part_of_the_link['fileUrl']
     whole_link = "http://sberbank.ru" + part_of_the_link
     xls_file = requests.get(whole_link, allow_redirects=True)
-
-    # Get the date from the link for further analysis
-    date_from_link = whole_link.split("/dm")[1][:6]
-    date_from_link = datetime.strptime(date_from_link, '%d%m%y')
-    date_from_link = datetime.date(date_from_link)
-    print(date_from_link)
     
-   # Retrieve the current gold bar value from the necessary cell of the file's first sheet
+    # Retrieve the current gold bar value from the necessary cell of the file's first sheet
     open('gold.xls', 'wb').write(xls_file.content)
     book = xlrd.open_workbook("gold.xls", encoding_override="cp1252")
     sheet = book.sheet_by_index(0)
@@ -58,9 +54,10 @@ if contents:
         reader = csv.DictReader(file, delimiter = ",")
         for line in reader:
             date_list.append(line['date'])
+
     # Write down current date and price into a csv file if they are new to the file
-    if date_list[-1] != str(date_from_link):
-        data = {'date': date_from_link, 'old_price': OLD_PRICE, 'new_price': new_price, 'percentage': percentage}
+    if date_list[-1] != date_string:
+        data = {'date': date_string, 'old_price': OLD_PRICE, 'new_price': new_price, 'percentage': percentage}
         with open("gold.csv", "a", encoding = "cp1251", newline = "") as f:
             fieldnames = ["date", "old_price", "new_price", "percentage"]
             writer = csv.DictWriter(f, fieldnames, delimiter = ",")
@@ -72,7 +69,7 @@ if contents:
     plt.plot(dataframe['date'], dataframe['old_price'])
     plt.plot(dataframe['date'], dataframe['new_price'])
 
-    # Gives names to the plot and its axis
+    # Give names to the plot and its axis
     plt.title('10-gram gold bar price fluctuation graph')
     plt.xlabel('Dates')
     plt.ylabel('Price [in roubles]')
