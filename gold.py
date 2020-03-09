@@ -44,7 +44,6 @@ if contents:
     book = xlrd.open_workbook("gold.xls", encoding_override="cp1252")
     sheet = book.sheet_by_index(0)
     new_price = int(sheet.cell_value(11, 3))
-    print(new_price)
 
     # Substract the current price from the purchase price and express it as a sum of money and percent
     OLD_PRICE = 31341
