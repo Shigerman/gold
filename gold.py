@@ -7,16 +7,6 @@ import pandas as pd
 import requests
 import xlrd
 
-# Compile the address where to get the necesssary link from.
-# The address changes depending on current month and year, months begin from 0. It compiles from 4 strings.
-address_start = "https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month="
-date = date.today()
-date_string = date.strftime('%d.%m.%Y')
-month = date_string[3:5]
-month = int(month) - 1
-year = date_string[6:10]
-address = address_start + str(month) + '&year=' + year
-
 # Secure from the non-operating site
 def get_url(url):
     try:
@@ -27,8 +17,20 @@ def get_url(url):
         print("сетевая ошибка")
         return False
 
-# Open up the necessary address of the bank's site
+# Compile the address where to get the necessary link from.
+# The address changes depending on current month and year, and compiles from 4 strings. Months begin from 0.
+address_start = "https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month="
+date = date.today()
+date_string = date.strftime('%d.%m.%Y')
+month = int(date_string[3:5])
+year = date_string[6:10]
+
+address = address_start + str(month) + '&year=' + year
 contents = get_url(address)
+if len(contents) < 5:
+    month = month - 1
+    address = address_start + str(month) + '&year=' + year
+    contents = get_url(address)
 
 # Download the latest published xls file with prices
 if contents:
@@ -42,6 +44,7 @@ if contents:
     book = xlrd.open_workbook("gold.xls", encoding_override="cp1252")
     sheet = book.sheet_by_index(0)
     new_price = int(sheet.cell_value(11, 3))
+    print(new_price)
 
     # Substract the current price from the purchase price and express it as a sum of money and percent
     OLD_PRICE = 31341
