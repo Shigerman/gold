@@ -1,4 +1,3 @@
-# Get the current price of a 10-gram gold bar from the bank site and compare it to the purchase price
 import csv
 from datetime import date
 import json
@@ -7,75 +6,128 @@ import pandas as pd
 import requests
 import xlrd
 
-# Secure from the non-operating site
-def get_url(url):
-    try:
-        result = requests.get(url)
-        result.raise_for_status()
-        return result.content
-    except(requests.RequestException, ValueError):
-        print("сетевая ошибка")
-        return False
 
-# Compile the address where to get the necessary link from.
-# The address changes depending on current month and year, and compiles from 4 strings. Months begin from 0.
-address_start = "https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month="
-date = date.today()
-date_string = date.strftime('%d.%m.%Y')
-month = int(date_string[3:5])
-year = date_string[6:10]
+def main():
+    def get_current_date_as_string():
+        current_date = date.today()
+        date_as_string = current_date.strftime('%d.%m.%Y')
+        return date_as_string
 
-address = address_start + str(month) + '&year=' + year
-contents = get_url(address)
-if len(contents) < 5:
-    month = month - 1
-    address = address_start + str(month) + '&year=' + year
-    contents = get_url(address)
 
-# Download the latest published xls file with prices
-if contents:
-    part_of_the_link = json.loads(contents)[-1]
-    part_of_the_link = part_of_the_link['fileUrl']
-    whole_link = "http://sberbank.ru" + part_of_the_link
-    xls_file = requests.get(whole_link, allow_redirects=True)
-    
-    # Retrieve the current gold bar value from the necessary cell of the file's first sheet
-    open('gold.xls', 'wb').write(xls_file.content)
-    book = xlrd.open_workbook("gold.xls", encoding_override="cp1252")
-    sheet = book.sheet_by_index(0)
-    new_price = int(sheet.cell_value(11, 3))
+    def get_current_month():
+        current_month = int(date_as_string[3:5])
+        return current_month
 
-    # Substract the current price from the purchase price and express it as a sum of money and percent
+
+    def get_current_year():
+        current_year = int(date_as_string[6:10])
+        return current_year
+
+
+    date_as_string = get_current_date_as_string()
+    month = get_current_month()
+    year = get_current_year()
+
+
+    def compile_bank_url(month, year):
+        url_beginning = "https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month="
+        url = url_beginning + str(month) + '&year=' + str(year)
+        return url
+
+
+    def get_bank_url_contents(url):
+        try:
+            result = requests.get(url)
+            #result.raise_for_status()
+            return result.content
+        except(requests.RequestException, ValueError):
+            print("Network error")
+            return False
+
+
+    url = compile_bank_url(month, year)
+    url_contents = get_bank_url_contents(url)
+
+    reasonable_amount_of_elements_per_page_in_action = 3
+    if len(url_contents) < reasonable_amount_of_elements_per_page_in_action:
+        while month > 0:
+            month -= 1
+            url = compile_bank_url(month, year)
+            url_contents = get_bank_url_contents(url)
+            if len(url_contents) > reasonable_amount_of_elements_per_page_in_action:
+                break
+
+
+    def download_file_with_gold_bar_prices(url_contents):
+        if url_contents:
+            most_recent_file_available = json.loads(url_contents)[-1]
+            part_of_url_of_most_recent_file = most_recent_file_available['fileUrl']
+            prices_file_url = "http://sberbank.ru" + part_of_url_of_most_recent_file
+            file_with_prices = requests.get(prices_file_url, allow_redirects=True)
+            open('gold.xls', 'wb').write(file_with_prices.content)
+        else:
+            print("File with gold_bar prices was not found")
+
+
+    download_file_with_gold_bar_prices(url_contents)
+
+
+    def retrieve_gold_bar_new_price():
+        book = xlrd.open_workbook("gold.xls", encoding_override="cp1252")
+        sheet = book.sheet_by_index(0)
+        new_price = int(sheet.cell_value(11, 3))
+        return new_price
+
+
+    new_price = retrieve_gold_bar_new_price()
     OLD_PRICE = 31341
-    percentage = int(((new_price - OLD_PRICE)*100)/OLD_PRICE)
-    print(f"{new_price} - 31341 = {int(new_price - OLD_PRICE)} rub., {percentage}%")
 
-    # Check if current date and price are already kept the csv file (if script is run several times a day)
-    date_list = []
-    with open("gold.csv", "r", encoding = "cp1251") as file:
-        reader = csv.DictReader(file, delimiter = ",")
-        for line in reader:
-            date_list.append(line['date'])
 
-    # Write down current date and price into a csv file if they are new to the file
-    if date_list[-1] != date_string:
-        data = {'date': date_string, 'old_price': OLD_PRICE, 'new_price': new_price, 'percentage': percentage}
-        with open("gold.csv", "a", encoding = "cp1251", newline = "") as f:
-            fieldnames = ["date", "old_price", "new_price", "percentage"]
-            writer = csv.DictWriter(f, fieldnames, delimiter = ",")
-            writer.writerow(data)
-            
-    # Show the graphs with the current price value and the old price value (in Jupyter) using data from csv file
-    dataframe = pd.read_csv('gold.csv', sep=',')
-    dataframe.drop_duplicates('date')
-    plt.plot(dataframe['date'], dataframe['old_price'])
-    plt.plot(dataframe['date'], dataframe['new_price'])
+    def print_price_comparison():
+        price_difference = new_price - OLD_PRICE
+        price_difference_as_percent = int((price_difference * 100) / OLD_PRICE)
+        print(f"{new_price} - 31341 = {int(price_difference)} rub., {price_difference_as_percent}%")
+        return price_difference_as_percent
 
-    # Give names to the plot and its axis
-    plt.title('10-gram gold bar price fluctuation graph')
-    plt.xlabel('Dates')
-    plt.ylabel('Price [in roubles]')
-    
-    # Make position of dates' inscriptions inclined (otherwise they get unreadable)
-    plt.xticks(dataframe['date'], rotation='25')
-    plt.show()
+
+    price_difference_as_percent = print_price_comparison()
+
+
+    def save_new_price_to_make_a_graph():
+        date_list = []
+        with open("gold.csv", "r", encoding="cp1251") as file:
+            reader = csv.DictReader(file, delimiter=",")
+            for line in reader:
+                date_list.append(line['date'])
+
+        if date_list[-1] != date_as_string:
+            data = {'date': date_as_string, 'old_price': OLD_PRICE, 'new_price': new_price,
+                   'percentage': price_difference_as_percent}
+            with open("gold.csv", "a", encoding="cp1251", newline="") as f:
+                fieldnames = ["date", "old_price", "new_price", "percentage"]
+                writer = csv.DictWriter(f, fieldnames, delimiter=",")
+                writer.writerow(data)
+
+
+    save_new_price_to_make_a_graph()
+
+
+    def show_price_change_graph():
+        dataframe = pd.read_csv('gold.csv', sep=',')
+        dataframe.drop_duplicates('date')
+        plt.plot(dataframe['date'], dataframe['old_price'])
+        plt.plot(dataframe['date'], dataframe['new_price'])
+
+        # Give names to the plot and its axis
+        plt.title('10-gram gold bar price fluctuation graph')
+        plt.xlabel('Dates')
+        plt.ylabel('Price [in roubles]')
+
+        # Make dates inscriptions inclined for readability
+        plt.xticks(dataframe['date'], rotation='25')
+        plt.show()
+
+    show_price_change_graph()
+
+if __name__ == "__main__":
+    main()
