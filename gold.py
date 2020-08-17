@@ -4,93 +4,90 @@ import json
 import matplotlib.pyplot as plt
 import pandas as pd
 import requests
+import textwrap
 import xlrd
 
 
 def main():
     def get_current_date_as_string():
         current_date = date.today()
-        date_as_string = current_date.strftime('%d.%m.%Y')
-        return date_as_string
+        return current_date.strftime('%d.%m.%Y')
 
 
     def get_current_month():
-        current_month = int(date_as_string[3:5])
-        return current_month
+        return int(current_date_str[3:5])
 
 
     def get_current_year():
-        current_year = int(date_as_string[6:10])
-        return current_year
+        return int(current_date_str[6:10])
 
 
-    date_as_string = get_current_date_as_string()
-    month = get_current_month()
-    year = get_current_year()
+    current_date_str = get_current_date_as_string()
+    current_month = get_current_month()
+    current_year = get_current_year()
 
 
-    def compile_bank_url(month, year):
-        url_beginning = "https://www.sberbank.ru/proxy/services/dict-services/document/list?groupCode=279&regionCode=77&month="
-        url = url_beginning + str(month) + '&year=' + str(year)
-        return url
+    def compile_bank_url(current_month, current_year):
+        url_start = "https://www.sberbank.ru/proxy/services/dict-services/"\
+                    "document/list?groupCode=279&regionCode=77&month="
+        return url_start + str(current_month) + '&year=' + str(current_year)
 
 
-    def get_bank_url_contents(url):
+    def request_price_file_list(current_month, current_year):
+        url = compile_bank_url(current_month, current_year)
         try:
             result = requests.get(url)
-            #result.raise_for_status()
             return result.content
         except(requests.RequestException, ValueError):
             print("Network error")
             return False
 
 
-    url = compile_bank_url(month, year)
-    url_contents = get_bank_url_contents(url)
+    price_file_list = request_price_file_list(current_month, current_year)
 
-    reasonable_amount_of_elements_per_page_in_action = 3
-    if len(url_contents) < reasonable_amount_of_elements_per_page_in_action:
-        while month > 0:
-            month -= 1
-            url = compile_bank_url(month, year)
-            url_contents = get_bank_url_contents(url)
-            if len(url_contents) > reasonable_amount_of_elements_per_page_in_action:
+    min_contents_size = 3 # '[]' for empty response
+    if len(price_file_list) < min_contents_size:
+        while current_month > 0:
+            current_month -= 1
+            price_file_list = request_price_file_list(current_month, current_year)
+            if len(price_file_list) > min_contents_size:
                 break
 
 
-    def download_file_with_gold_bar_prices(url_contents):
-        if url_contents:
-            most_recent_file_available = json.loads(url_contents)[-1]
-            part_of_url_of_most_recent_file = most_recent_file_available['fileUrl']
-            prices_file_url = "http://sberbank.ru" + part_of_url_of_most_recent_file
-            file_with_prices = requests.get(prices_file_url, allow_redirects=True)
-            open('gold.xls', 'wb').write(file_with_prices.content)
-        else:
-            print("File with gold_bar prices was not found")
+    def download_gold_bar_prices(price_file_list):
+        most_recent_file_available = json.loads(price_file_list)[-1]
+        url_part_of_most_recent_file = most_recent_file_available['fileUrl']
+        prices_file_url = 'http://sberbank.ru' + url_part_of_most_recent_file
+        file_with_prices = requests.get(prices_file_url, allow_redirects=True)
+        return file_with_prices.content
 
 
-    download_file_with_gold_bar_prices(url_contents)
+    if price_file_list:
+        file_content = download_gold_bar_prices(price_file_list)
+        xls_file_name = 'gold.xls'
+        open(xls_file_name, 'wb').write(file_content)
+    else:
+        print("File with gold bar prices was not found")
 
 
-    def retrieve_gold_bar_new_price():
-        book = xlrd.open_workbook("gold.xls", encoding_override="cp1252")
+    def gold_bar_price_from_xls(xls_file_name):
+        book = xlrd.open_workbook(xls_file_name, encoding_override="cp1252")
         sheet = book.sheet_by_index(0)
-        new_price = int(sheet.cell_value(11, 3))
-        return new_price
+        return int(sheet.cell_value(11, 3))
 
 
-    new_price = retrieve_gold_bar_new_price()
+    def count_price_diff_as_percent(new_price, OLD_PRICE):
+        return int(((new_price - OLD_PRICE) * 100) / OLD_PRICE)
+
+
     OLD_PRICE = 31341
-
-
-    def print_price_comparison():
-        price_difference = new_price - OLD_PRICE
-        price_difference_as_percent = int((price_difference * 100) / OLD_PRICE)
-        print(f"{new_price} - 31341 = {int(price_difference)} rub., {price_difference_as_percent}%")
-        return price_difference_as_percent
-
-
-    price_difference_as_percent = print_price_comparison()
+    new_price = gold_bar_price_from_xls(xls_file_name)
+    price_diff_as_percent = count_price_diff_as_percent(new_price, OLD_PRICE)
+    print(textwrap.dedent(f"""
+        {new_price} - 31341 = 
+        {int(new_price - OLD_PRICE)} rub., 
+        {price_diff_as_percent}%
+        """).replace("\n", ""))
 
 
     def save_new_price_to_make_a_graph():
@@ -100,16 +97,14 @@ def main():
             for line in reader:
                 date_list.append(line['date'])
 
-        if date_list[-1] != date_as_string:
-            data = {'date': date_as_string, 'old_price': OLD_PRICE, 'new_price': new_price,
-                   'percentage': price_difference_as_percent}
+        if date_list[-1] != current_date_str:
+            data = {'date': current_date_str, 'old_price': OLD_PRICE,
+                    'new_price': new_price,
+                    'percentage': price_diff_as_percent}
             with open("gold.csv", "a", encoding="cp1251", newline="") as f:
                 fieldnames = ["date", "old_price", "new_price", "percentage"]
                 writer = csv.DictWriter(f, fieldnames, delimiter=",")
                 writer.writerow(data)
-
-
-    save_new_price_to_make_a_graph()
 
 
     def show_price_change_graph():
@@ -127,6 +122,8 @@ def main():
         plt.xticks(dataframe['date'], rotation='25')
         plt.show()
 
+
+    save_new_price_to_make_a_graph()
     show_price_change_graph()
 
 if __name__ == "__main__":
