@@ -1,36 +1,53 @@
-Gold (Золото)
-=================
+# Gold
 
-Скрипт получает текущую стоимость 10-граммового золотого слитка с сайта банка в .xls файле. Затем он сравниваниет текущую стоимость со стоимостью покупки слитка, выражает её в рублях и  процентах и на графике отображает изменения стоимости с момента покупки до текущего дня. 
+The script gets the current price of a 10-gram gold bar from the bank site
+and compares it to the price of purchase made in 2018.
 
-Данные для построения графика берутся из csv файла, куда они сохраняются скриптом каждый раз, когда он получает новую стоимость с сайта.
+The price difference is expressed in roubles and percent and also with the help of a graph.
 
-Время получения этих данных вручную: 1 мин. 36 сек., с помощью скрипта: 41 сек. Это в 2 раза быстрее(!) + возможность увидеть график.
+The data for building the graph is taken from the csv file, where the current 
+price and date are saved every time the script is run.
 
 ***********
 
 
-Используемые инструменты:
----------
+## Instruments used:
+
 ```
     Python, Requests, Pandas, Matplotlib
 ```
 
-Запуск скрипта
----------
+## How to run the script:
 
-Aктивируйте виртуальное окружение:
+Clone the repository.
 
-```
-    На Windows: env\Scripts\activate
-```
-```
-    На Mac или Linux: source env/bin/activate
-```
-После этого в виртуальном окружении выполните:
+Create the virtual environment:
 
 ```
-    python gold.py
+    python3 -m venv .venv
 ```
 
-В командной строке откроется график и выведется изменение стоимости слитка в рублях и процентах.
+Activate the virtual environment:
+
+```
+    for Windows: .venv\Scripts\activate
+```
+```
+    for Mac or Linux: . .venv/bin/activate
+```
+
+Install the dependencies:
+
+```
+    pip install -r requirements.txt
+```
+
+Run the script:
+
+```
+    python3 gold.py
+```
+
+First you will see a graph of the gold bar price change.
+After closing the graph, the command line will print out the gold bar price
+difference in roubles and percent.
