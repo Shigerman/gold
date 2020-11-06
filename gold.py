@@ -15,7 +15,7 @@ def main():
 
 
     def get_current_month():
-        return int(current_date_str[3:5])
+        return int(current_date_str[3:5]) - 1 # months start from 0
 
 
     def get_current_year():
@@ -81,6 +81,7 @@ def main():
 
 
     OLD_PRICE = 31341
+    xls_file_name = 'gold.xls'
     new_price = gold_bar_price_from_xls(xls_file_name)
     price_diff_as_percent = count_price_diff_as_percent(new_price, OLD_PRICE)
     print(textwrap.dedent(f"""
@@ -98,7 +99,8 @@ def main():
                 date_list.append(line['date'])
 
         if date_list[-1] != current_date_str:
-            data = {'date': current_date_str, 'old_price': OLD_PRICE,
+            data = {'date': current_date_str, 
+                    'old_price': OLD_PRICE,
                     'new_price': new_price,
                     'percentage': price_diff_as_percent}
             with open("gold.csv", "a", encoding="cp1251", newline="") as f:
