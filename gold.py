@@ -9,7 +9,7 @@ import xlrd
 
 
 def get_current_date():
-    current_date = date.today() # 2020-03-06
+    current_date = date.today() # 07.11.2020
     return current_date.strftime('%d.%m.%Y')
 
 
@@ -64,26 +64,7 @@ def count_price_diff_as_percent(new_price, OLD_PRICE):
     return int(((new_price - OLD_PRICE) * 100) / OLD_PRICE)
 
 
-def save_new_price_to_make_a_graph(current_date: str):
-    date_list = []
-    with open("gold.csv", "r", encoding="cp1251") as file:
-        reader = csv.DictReader(file, delimiter=",")
-        for line in reader:
-            date_list.append(line['date'])
-
-    if date_list[-1] != current_date:
-        data = {'date': current_date,
-                'old_price': OLD_PRICE,
-                'new_price': new_price,
-                'percentage': price_diff_as_percent}
-        with open("gold.csv", "a", encoding="cp1251", newline="") as f:
-            fieldnames = ["date", "old_price", "new_price", "percentage"]
-            writer = csv.DictWriter(f, fieldnames, delimiter=",")
-            writer.writerow(data)
-
-
 def main():
-
     current_date = get_current_date()
     current_month = get_current_month(current_date)
     current_year = get_current_year(current_date)
@@ -103,14 +84,33 @@ def main():
         open(xls_file_name, 'wb').write(file_content)
     else:
         print("File with gold bar prices was not found")
+    
+
+    def save_new_price_to_make_a_graph():
+        date_list = []
+        with open("gold.csv", "r", encoding="cp1251") as file:
+            reader = csv.DictReader(file, delimiter=",")
+            for line in reader:
+                date_list.append(line['date'])
+
+        if date_list[-1] != current_date:
+            data = {'date': current_date,
+                    'old_price': OLD_PRICE,
+                    'new_price': new_price,
+                    'percentage': price_diff_as_percent}
+            with open("gold.csv", "a", encoding="cp1251", newline="") as f:
+                fieldnames = ["date", "old_price", "new_price", "percentage"]
+                writer = csv.DictWriter(f, fieldnames, delimiter=",")
+                writer.writerow(data)
+
 
     OLD_PRICE = 31341
     xls_file_name = 'gold.xls'
     new_price = gold_bar_price_from_xls(xls_file_name)
     price_diff_as_percent = count_price_diff_as_percent(new_price, OLD_PRICE)
     print(textwrap.dedent(f"""
-        {new_price} - 31341 =
-        {int(new_price - OLD_PRICE)} rub.,
+        {new_price} - 31341 = 
+        {int(new_price - OLD_PRICE)} rub., 
         {price_diff_as_percent}%
         """).replace("\n", ""))
 
@@ -131,7 +131,7 @@ def main():
         plt.show()
 
 
-    save_new_price_to_make_a_graph(current_date)
+    save_new_price_to_make_a_graph()
     show_price_change_graph()
 
 if __name__ == "__main__":
