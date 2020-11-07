@@ -64,7 +64,7 @@ def count_price_diff_as_percent(new_price, OLD_PRICE):
     return int(((new_price - OLD_PRICE) * 100) / OLD_PRICE)
 
 
-def save_new_price_to_make_a_graph():
+def save_new_price_to_make_a_graph(current_date: str):
     date_list = []
     with open("gold.csv", "r", encoding="cp1251") as file:
         reader = csv.DictReader(file, delimiter=",")
@@ -131,7 +131,7 @@ def main():
         plt.show()
 
 
-    save_new_price_to_make_a_graph()
+    save_new_price_to_make_a_graph(current_date)
     show_price_change_graph()
 
 if __name__ == "__main__":
