@@ -1,12 +1,14 @@
 # Gold
 
-The script gets the current price of a 10-gram gold bar from the bank site
-and compares it to the price of purchase made in 2018.
+The script receives the current price of a 10-gram gold bar from the bank site
+and compares it to the purchase price in 2018.
 
-The price difference is expressed in roubles and percent and also with the help of a graph.
+The price difference is expressed in roubles and percent
+and also with the help of a line graph.
 
-The data for building the graph is taken from the csv file, where the current 
-price and date are saved every time the script is run.
+The data for building the graph is taken from the csv file,
+where price/date are saved every time the script is run.
+
 
 ***********
 
@@ -42,12 +44,18 @@ Install the dependencies:
     pip install -r requirements.txt
 ```
 
+Run the tests:
+```
+    pytest test_gold.py
+```
+
 Run the script:
 
 ```
     python3 gold.py
 ```
 
-First you will see a graph of the gold bar price change.
-After closing the graph, the command line will print out the gold bar price
-difference in roubles and percent.
+First you will see a line graph of the gold bar price difference.
+
+After closing the graph, the command line will display
+the gold bar price difference expressed in roubles and percent.
