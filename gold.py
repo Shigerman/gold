@@ -27,7 +27,7 @@ def compile_bank_url(current_month, current_year):
     return url_start + str(current_month) + '&year=' + str(current_year)
 
 
-def request_price_file_list(current_month, current_year):
+def request_price_files(current_month, current_year):
     url = compile_bank_url(current_month, current_year)
     try:
         result = requests.get(url)
@@ -37,8 +37,8 @@ def request_price_file_list(current_month, current_year):
         return False
 
 
-def download_gold_bar_prices(price_file_list):
-    most_recent_file_available = json.loads(price_file_list)[-1]
+def download_gold_bar_prices(price_files):
+    most_recent_file_available = json.loads(price_files)[-1]
     url_part_of_most_recent_file = most_recent_file_available['fileUrl']
     prices_file_url = 'http://sberbank.ru' + url_part_of_most_recent_file
     file_with_prices = requests.get(prices_file_url, allow_redirects=True)
@@ -51,35 +51,22 @@ def gold_bar_price_from_xls(xls_file_name):
     return int(sheet.cell_value(11, 3))
 
 
-def count_price_diff_as_percent(new_price, OLD_PRICE):
-    return int(((new_price - OLD_PRICE) * 100) / OLD_PRICE)
-
-
-def gold_bar_price_from_xls(xls_file_name):
-    book = xlrd.open_workbook(xls_file_name, encoding_override="cp1252")
-    sheet = book.sheet_by_index(0)
-    return int(sheet.cell_value(11, 3))
-
-def count_price_diff_as_percent(new_price, OLD_PRICE):
-    return int(((new_price - OLD_PRICE) * 100) / OLD_PRICE)
-
-
 def main():
     current_date = get_current_date()
     current_month = get_current_month(current_date)
     current_year = get_current_year(current_date)
-    price_file_list = request_price_file_list(current_month, current_year)
+    price_files = request_price_files(current_month, current_year)
 
     min_contents_size = 3 # '[]' for empty response
-    if len(price_file_list) < min_contents_size:
+    if len(price_files) < min_contents_size:
         while current_month > 0:
             current_month -= 1
-            price_file_list = request_price_file_list(current_month, current_year)
-            if len(price_file_list) > min_contents_size:
+            price_files = request_price_files(current_month, current_year)
+            if len(price_files) > min_contents_size:
                 break
 
-    if price_file_list:
-        file_content = download_gold_bar_prices(price_file_list)
+    if price_files:
+        file_content = download_gold_bar_prices(price_files)
         xls_file_name = 'gold.xls'
         open(xls_file_name, 'wb').write(file_content)
     else:
@@ -104,17 +91,6 @@ def main():
                 writer.writerow(data)
 
 
-    OLD_PRICE = 31341
-    xls_file_name = 'gold.xls'
-    new_price = gold_bar_price_from_xls(xls_file_name)
-    price_diff_as_percent = count_price_diff_as_percent(new_price, OLD_PRICE)
-    print(textwrap.dedent(f"""
-        {new_price} - 31341 = 
-        {int(new_price - OLD_PRICE)} rub., 
-        {price_diff_as_percent}%
-        """).replace("\n", ""))
-
-
     def show_price_change_graph():
         dataframe = pd.read_csv('gold.csv', sep=',')
         dataframe.drop_duplicates('date')
@@ -130,6 +106,16 @@ def main():
         plt.xticks(dataframe['date'], rotation='25')
         plt.show()
 
+
+    OLD_PRICE = 31341
+    xls_file_name = 'gold.xls'
+    new_price = gold_bar_price_from_xls(xls_file_name)
+    price_diff_as_percent = int(((new_price - OLD_PRICE) * 100) / OLD_PRICE)
+    print(textwrap.dedent(f"""
+        {new_price} - 31341 = 
+        {int(new_price - OLD_PRICE)} rub., 
+        {price_diff_as_percent}%
+        """).replace("\n", ""))
 
     save_new_price_to_make_a_graph()
     show_price_change_graph()
