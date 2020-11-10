@@ -1,5 +1,6 @@
-import pytest
 import gold
+import pytest
+import tempfile
 import xlrd
 
 
@@ -65,24 +66,17 @@ def test_received_price():
             if len(price_files) > min_contents_size:
                 break
     file_content = gold.download_gold_bar_prices(price_files)
-    with open('test_gold.xls', 'wb') as out:
-        out.write(file_content)
-    gold_bar_price = gold.gold_bar_price_from_xls('test_gold.xls')
-    assert type(gold_bar_price) == int, "Gold bar price is not an integer"
-    assert gold_bar_price > 0, "Gold bar price is negative"
+    with tempfile.NamedTemporaryFile() as temp:
+        temp.write(file_content)
+        gold_bar_price = gold.gold_bar_price_from_xls(temp.name)
+        assert type(gold_bar_price) == int, "Gold bar price is not an integer"
+        assert gold_bar_price > 0, "Gold bar price is negative"
 
-    book = xlrd.open_workbook('test_gold.xls', encoding_override="cp1252")
-    sheet = book.sheet_by_index(0)
-    bar_material = sheet.cell_value(8, 0)
-    assert bar_material.strip() == "Золото", "The price is not for a gold bar"
-    bar_weight = sheet.cell_value(11, 0) # The script is about a 10-gram bar
-    assert int(bar_weight) == 10, "The price weight is wrong"
+        book = xlrd.open_workbook(temp.name, encoding_override="cp1252")
+        sheet = book.sheet_by_index(0)
+        bar_metal = sheet.cell_value(8, 0)
+        assert bar_metal.strip() == "Золото", "Price is not for a bar of gold"
+        bar_weight = sheet.cell_value(11, 0) # I'm interested in 10-gram bar
+        assert int(bar_weight) == 10, "The price weight is wrong"
 
-
-"""test_current_date()
-test_current_month()
-test_current_year()
-test_bank_url()
-test_check_web_page_is_available()
-test_check_xls_file_is_downloaded()
-test_received_price()"""
+        temp.flush()
