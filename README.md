@@ -55,7 +55,7 @@ Run the script:
     python3 gold.py
 ```
 
-First you will see a line graph of the gold bar price difference.
-
-After closing the graph, the command line will display
+First the command line will display
 the gold bar price difference expressed in roubles and percent.
+
+Then you will see a line graph of the gold bar price difference.
