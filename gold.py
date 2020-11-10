@@ -68,7 +68,8 @@ def main():
     if price_files:
         file_content = download_gold_bar_prices(price_files)
         xls_file_name = 'gold.xls'
-        open(xls_file_name, 'wb').write(file_content)
+        with open(xls_file_name, 'wb') as out:
+            out.write(file_content)
     else:
         print("File with gold bar prices was not found")
     
