@@ -23,8 +23,8 @@ def test_current_year():
 
 
 def test_bank_url():
-    month = 5
-    year = 2020
+    month = 1
+    year = 2021
     bank_url = gold.compile_bank_url(month, year)
     assert type(bank_url) == str, "Bank url is not a string"
     assert len(bank_url) > 110, "Bank url is too short"
@@ -32,39 +32,46 @@ def test_bank_url():
     
 
 def test_check_web_page_is_available():
-    month = 5
-    year = 2020
+    month = 1
+    year = 2021
     request_result = gold.request_price_files(month, year)
     assert request_result is not False, "Request is not successful"
     assert type(request_result) == bytes, "Type of requst result isn't bytes"
 
 
 def test_check_xls_file_is_downloaded():
-    month = 5
-    year = 2020
+    month = 1
+    year = 2021
     price_files = gold.request_price_files(month, year)
     min_contents_size = 3 # '[]' for empty response
-    if len(price_files) < min_contents_size:
-        while current_month > 0:
-            current_month -= 1
-            price_files = gold.request_price_files(month, year)
-            if len(price_files) > min_contents_size:
-                break
+    min_year_to_check = 2018
+    while len(price_files) < min_contents_size and year >= min_year_to_check:
+        # check previous months if bank has no prices for current month
+        if month > 0:
+            month -= 1
+        elif month == 0:
+            month = 11
+            year -= 1
+        price_files = gold.request_price_files(month, year)
     file_with_prices = gold.download_gold_bar_prices(price_files)
     assert file_with_prices is not False, "File was not downloaded"
 
 
 def test_received_price():
-    month = 5
+    month = 12
     year = 2020
     price_files = gold.request_price_files(month, year)
     min_contents_size = 3 # '[]' for empty response
-    if len(price_files) < min_contents_size:
-        while current_month > 0:
-            current_month -= 1
-            price_files = gold.request_price_files(month, year)
-            if len(price_files) > min_contents_size:
-                break
+    min_year_to_check = 2018
+    while len(price_files) < min_contents_size and year >= min_year_to_check:
+        # check previous months if bank has no prices for current month
+        if month > 0:
+            month -= 1
+        elif month == 0:
+            month = 11
+            year -= 1
+        price_files = gold.request_price_files(month, year)
+
     file_content = gold.download_gold_bar_prices(price_files)
     with tempfile.NamedTemporaryFile() as temp:
         temp.write(file_content)
