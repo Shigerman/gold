@@ -58,12 +58,15 @@ def main():
     price_files = request_price_files(current_month, current_year)
 
     min_contents_size = 3 # '[]' for empty response
-    if len(price_files) < min_contents_size:
-        while current_month > 0:
-            current_month -= 1
-            price_files = request_price_files(current_month, current_year)
-            if len(price_files) > min_contents_size:
-                break
+    min_year_to_check = 2018
+    while len(price_files) < min_contents_size and year >= min_year_to_check:
+        # check previous months if bank has no prices for current month
+        if month > 0:
+            month -= 1
+        elif month == 0:
+            month = 11
+            year -= 1
+        price_files = gold.request_price_files(month, year)
 
     if price_files:
         file_content = download_gold_bar_prices(price_files)
