@@ -34,7 +34,7 @@ def test_bank_url():
 def test_check_web_page_is_available():
     month = 1
     year = 2021
-    request_result = gold.request_price_files(month, year)
+    request_result = gold.get_bank_url_content(month, year)
     assert request_result is not False, "Request is not successful"
     assert type(request_result) == bytes, "Type of requst result isn't bytes"
 
@@ -42,40 +42,40 @@ def test_check_web_page_is_available():
 def test_check_xls_file_is_downloaded():
     month = 1
     year = 2021
-    price_files = gold.request_price_files(month, year)
-    min_contents_size = 3 # '[]' for empty response
+    url_content = gold.get_bank_url_content(month, year)
+    min_content_size = 3 # '[]' for empty response
     min_year_to_check = 2018
-    while len(price_files) < min_contents_size and year >= min_year_to_check:
+    while len(url_content) < min_content_size and year >= min_year_to_check:
         # check previous months if bank has no prices for current month
         if month > 0:
             month -= 1
         elif month == 0:
             month = 11
             year -= 1
-        price_files = gold.request_price_files(month, year)
-    file_with_prices = gold.download_gold_bar_prices(price_files)
-    assert file_with_prices is not False, "File was not downloaded"
+        url_content = gold.get_bank_url_content(month, year)
+    file_content = gold.download_file_with_prices(url_content)
+    assert file_content is not False, "File was not downloaded"
 
 
 def test_received_price():
     month = 12
     year = 2020
-    price_files = gold.request_price_files(month, year)
-    min_contents_size = 3 # '[]' for empty response
+    url_content = gold.get_bank_url_content(month, year)
+    min_content_size = 3 # '[]' for empty response
     min_year_to_check = 2018
-    while len(price_files) < min_contents_size and year >= min_year_to_check:
+    while len(url_content) < min_content_size and year >= min_year_to_check:
         # check previous months if bank has no prices for current month
         if month > 0:
             month -= 1
         elif month == 0:
             month = 11
             year -= 1
-        price_files = gold.request_price_files(month, year)
+        url_content = gold.get_bank_url_content(month, year)
 
-    file_content = gold.download_gold_bar_prices(price_files)
+    file_content = gold.download_file_with_prices(url_content)
     with tempfile.NamedTemporaryFile() as temp:
         temp.write(file_content)
-        gold_bar_price = gold.gold_bar_price_from_xls(temp.name)
+        gold_bar_price = gold.get_gold_bar_price_from_xls(temp.name)
         assert type(gold_bar_price) == int, "Gold bar price is not an integer"
         assert gold_bar_price > 0, "Gold bar price is negative"
 
