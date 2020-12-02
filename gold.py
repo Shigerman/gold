@@ -6,28 +6,32 @@ import pandas as pd
 import requests
 import textwrap
 import xlrd
+from typing import Union
 
 
-def get_current_date():
+def get_current_date() -> str:
     current_date = date.today() # 07.11.2020
     return current_date.strftime('%d.%m.%Y')
 
 
-def get_current_month(current_date: str):
+def get_current_month(current_date: str) -> int:
     return int(current_date[3:5]) - 1 # months start from 0
 
 
-def get_current_year(current_date: str):
+def get_current_year(current_date: str) -> int:
     return int(current_date[6:10])
 
 
-def compile_bank_url(current_month, current_year):
+def compile_bank_url(current_month: int, current_year: int) -> str:
     url_start = "https://www.sberbank.ru/proxy/services/dict-services/"\
                 "document/list?groupCode=279&regionCode=77&month="
     return url_start + str(current_month) + '&year=' + str(current_year)
 
 
-def request_price_files(current_month, current_year):
+def get_bank_url_content(
+    current_month: int,
+    current_year: int
+) -> Union[bytes, bool]:
     url = compile_bank_url(current_month, current_year)
     try:
         result = requests.get(url)
@@ -37,15 +41,15 @@ def request_price_files(current_month, current_year):
         return False
 
 
-def download_gold_bar_prices(price_files):
-    most_recent_file_available = json.loads(price_files)[-1]
-    url_part_of_most_recent_file = most_recent_file_available['fileUrl']
-    prices_file_url = 'http://sberbank.ru' + url_part_of_most_recent_file
-    file_with_prices = requests.get(prices_file_url, allow_redirects=True)
-    return file_with_prices.content
+def download_file_with_prices(url_content: bytes) -> bytes:
+    most_recent_file_available = json.loads(url_content)[-1]
+    most_recent_file_url = most_recent_file_available['fileUrl']
+    most_recent_file_url = 'http://sberbank.ru' + most_recent_file_url
+    file_content = requests.get(most_recent_file_url, allow_redirects=True)
+    return file_content.content
 
 
-def gold_bar_price_from_xls(xls_file_name):
+def get_gold_bar_price_from_xls(xls_file_name: str) -> int:
     book = xlrd.open_workbook(xls_file_name, encoding_override="cp1252")
     sheet = book.sheet_by_index(0)
     return int(sheet.cell_value(11, 3))
@@ -55,22 +59,22 @@ def main():
     current_date = get_current_date()
     current_month = get_current_month(current_date)
     current_year = get_current_year(current_date)
-    price_files = request_price_files(current_month, current_year)
+    url_content = get_bank_url_content(current_month, current_year)
 
-    min_contents_size = 3 # '[]' for empty response
+    min_content_size = 3 # '[]' for empty response
     min_year_to_check = 2018
-    while len(price_files) < min_contents_size and year >= min_year_to_check:
+    while len(url_content) < min_content_size and year >= min_year_to_check:
         # check previous months if bank has no prices for current month
         if month > 0:
             month -= 1
         elif month == 0:
             month = 11
             year -= 1
-        price_files = gold.request_price_files(month, year)
+        url_content = get_bank_url_content(month, year)
 
-    if price_files:
-        file_content = download_gold_bar_prices(price_files)
-        xls_file_name = 'gold.xls'
+    xls_file_name = 'gold.xls'
+    if url_content:
+        file_content = download_file_with_prices(url_content)
         with open(xls_file_name, 'wb') as out:
             out.write(file_content)
     else:
@@ -78,7 +82,7 @@ def main():
     
 
     def save_new_price_to_make_a_graph():
-        date_list = []
+        date_list: list = []
         with open("gold.csv", "r", encoding="cp1251") as file:
             reader = csv.DictReader(file, delimiter=",")
             for line in reader:
@@ -112,8 +116,7 @@ def main():
 
 
     OLD_PRICE = 31341
-    xls_file_name = 'gold.xls'
-    new_price = gold_bar_price_from_xls(xls_file_name)
+    new_price = get_gold_bar_price_from_xls(xls_file_name)
     price_diff_as_percent = int(((new_price - OLD_PRICE) * 100) / OLD_PRICE)
     print(textwrap.dedent(f"""
         {new_price} - 31341 = 
