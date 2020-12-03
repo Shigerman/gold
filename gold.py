@@ -28,17 +28,13 @@ def compile_bank_url(current_month: int, current_year: int) -> str:
     return url_start + str(current_month) + '&year=' + str(current_year)
 
 
-def get_bank_url_content(
-    current_month: int,
-    current_year: int
-) -> Union[bytes, bool]:
+def get_bank_url_content(current_month: int, current_year: int) -> bytes:
     url = compile_bank_url(current_month, current_year)
     try:
         result = requests.get(url)
         return result.content
     except(requests.RequestException, ValueError):
-        print("Network error")
-        return False
+        raise Exception("network error")
 
 
 def download_file_with_prices(url_content: bytes) -> bytes:

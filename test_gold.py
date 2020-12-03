@@ -36,7 +36,7 @@ def test_check_web_page_is_available():
     year = 2021
     request_result = gold.get_bank_url_content(month, year)
     assert request_result is not False, "Request is not successful"
-    assert type(request_result) == bytes, "Type of requst result isn't bytes"
+    assert type(request_result) == bytes, "Type of request result isn't bytes"
 
 
 def test_check_xls_file_is_downloaded():
@@ -54,7 +54,7 @@ def test_check_xls_file_is_downloaded():
             year -= 1
         url_content = gold.get_bank_url_content(month, year)
     file_content = gold.download_file_with_prices(url_content)
-    assert file_content is not False, "File was not downloaded"
+    assert file_content is not None, "File was not downloaded"
 
 
 def test_received_price():
