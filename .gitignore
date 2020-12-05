@@ -2,6 +2,5 @@
 .vscode/
 __pycache__/
 *.log
-env/
 logdist.txt
 gold.xls
