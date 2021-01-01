@@ -59,14 +59,15 @@ def main():
 
     min_content_size = 3 # '[]' for empty response
     min_year_to_check = 2018
-    while len(url_content) < min_content_size and year >= min_year_to_check:
+    while len(url_content) < min_content_size and \
+        current_year >= min_year_to_check:
         # check previous months if bank has no prices for current month
-        if month > 0:
-            month -= 1
-        elif month == 0:
-            month = 11
-            year -= 1
-        url_content = get_bank_url_content(month, year)
+        if current_month > 0:
+            current_month -= 1
+        elif current_month == 0:
+            current_month = 11
+            current_year -= 1
+        url_content = get_bank_url_content(current_month, current_year)
 
     xls_file_name = 'gold.xls'
     if url_content:
