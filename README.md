@@ -16,43 +16,28 @@ where price/date are saved every time the script is run.
 ## Instruments used:
 
 ```
-    Python, Requests, Pandas, Matplotlib
+    Python, Requests, Pandas, Matplotlib, Poetry
 ```
 
 ## How to run the script:
 
 Clone the repository.
 
-Create the virtual environment:
-
-```
-    python3 -m venv .venv
-```
-
-Activate the virtual environment:
-
-```
-    for Windows: .venv\Scripts\activate
-```
-```
-    for Mac or Linux: . .venv/bin/activate
-```
-
 Install the dependencies:
 
 ```
-    pip install -r requirements.txt
+    poetry install
 ```
 
 Run the tests:
 ```
-    pytest test_gold.py
+    poetry run pytest
 ```
 
 Run the script:
 
 ```
-    python3 gold.py
+    poetry run python gold.py
 ```
 
 First the command line will display
