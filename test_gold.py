@@ -5,19 +5,19 @@ import xlrd
 
 
 def test_current_date():
-    date = gold.get_current_date()
+    date = gold.get_cur_date()
     assert type(date) == str, "Current date is not a string"
     assert len(date) == len("DD.MM.YYYY"), "Current date has a wrong length"
 
 
 def test_current_month():
-    month = gold.get_current_month("07.11.2020")
+    month = gold.get_cur_month("07.11.2020")
     assert type(month) == int, "Current month is not an integer"
     assert 0 <= month <= 11, "Current month has an unreal number"
 
 
 def test_current_year():
-    year = gold.get_current_year("07.11.2020")
+    year = gold.get_cur_year("07.11.2020")
     assert type(year) == int, "Current year is not an integer"
     assert len(str(year)) == 4, "Current year is too short to be true"
 

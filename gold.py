@@ -9,27 +9,27 @@ import xlrd
 from typing import Union
 
 
-def get_current_date() -> str:
-    current_date = date.today() # 07.11.2020
-    return current_date.strftime('%d.%m.%Y')
+def get_cur_date() -> str:
+    cur_date = date.today() # 07.11.2020
+    return cur_date.strftime('%d.%m.%Y')
 
 
-def get_current_month(current_date: str) -> int:
-    return int(current_date[3:5]) - 1 # months start from 0
+def get_cur_month(cur_date: str) -> int:
+    return int(cur_date[3:5]) - 1 # months start from 0
 
 
-def get_current_year(current_date: str) -> int:
-    return int(current_date[6:10])
+def get_cur_year(cur_date: str) -> int:
+    return int(cur_date[6:10])
 
 
-def compile_bank_url(current_month: int, current_year: int) -> str:
+def compile_bank_url(cur_month: int, cur_year: int) -> str:
     url_start = "https://www.sberbank.ru/proxy/services/dict-services/"\
                 "document/list?groupCode=279&regionCode=77&month="
-    return url_start + str(current_month) + '&year=' + str(current_year)
+    return url_start + str(cur_month) + '&year=' + str(cur_year)
 
 
-def get_bank_url_content(current_month: int, current_year: int) -> bytes:
-    url = compile_bank_url(current_month, current_year)
+def get_bank_url_content(cur_month: int, cur_year: int) -> bytes:
+    url = compile_bank_url(cur_month, cur_year)
     try:
         result = requests.get(url)
         return result.content
@@ -52,22 +52,22 @@ def get_gold_bar_price_from_xls(xls_file_name: str) -> int:
 
 
 def main():
-    current_date = get_current_date()
-    current_month = get_current_month(current_date)
-    current_year = get_current_year(current_date)
-    url_content = get_bank_url_content(current_month, current_year)
+    cur_date = get_cur_date()
+    cur_month = get_cur_month(cur_date)
+    cur_year = get_cur_year(cur_date)
+    url_content = get_bank_url_content(cur_month, cur_year)
 
     min_content_size = 3 # '[]' for empty response
     min_year_to_check = 2018
     while len(url_content) < min_content_size and \
-        current_year >= min_year_to_check:
+        cur_year >= min_year_to_check:
         # check previous months if bank has no prices for current month
-        if current_month > 0:
-            current_month -= 1
-        elif current_month == 0:
-            current_month = 11
-            current_year -= 1
-        url_content = get_bank_url_content(current_month, current_year)
+        if cur_month > 0:
+            cur_month -= 1
+        elif cur_month == 0:
+            cur_month = 11
+            cur_year -= 1
+        url_content = get_bank_url_content(cur_month, cur_year)
 
     xls_file_name = 'gold.xls'
     if url_content:
@@ -85,8 +85,8 @@ def main():
             for line in reader:
                 date_list.append(line['date'])
 
-        if date_list[-1] != current_date:
-            data = {'date': current_date,
+        if date_list[-1] != cur_date:
+            data = {'date': cur_date,
                     'old_price': OLD_PRICE,
                     'new_price': new_price,
                     'percentage': price_diff_as_percent}
