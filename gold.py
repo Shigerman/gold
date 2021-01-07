@@ -46,7 +46,7 @@ def download_file_with_prices(url_content: bytes) -> bytes:
 
 
 def get_gold_bar_price_from_xls(xls_file_name: str) -> int:
-    book = xlrd.open_workbook(xls_file_name, encoding_override="cp1252")
+    book = xlrd.open_workbook(xls_file_name)
     sheet = book.sheet_by_index(0)
     return int(sheet.cell_value(11, 3))
 
@@ -80,7 +80,7 @@ def main():
 
     def save_new_price_to_make_a_graph():
         date_list: list = []
-        with open("gold.csv", "r", encoding="cp1251") as file:
+        with open("gold.csv", "r") as file:
             reader = csv.DictReader(file, delimiter=",")
             for line in reader:
                 date_list.append(line['date'])
@@ -90,7 +90,7 @@ def main():
                     'old_price': OLD_PRICE,
                     'new_price': new_price,
                     'percentage': price_diff_as_percent}
-            with open("gold.csv", "a", encoding="cp1251", newline="") as f:
+            with open("gold.csv", "a", newline="") as f:
                 fieldnames = ["date", "old_price", "new_price", "percentage"]
                 writer = csv.DictWriter(f, fieldnames, delimiter=",")
                 writer.writerow(data)
