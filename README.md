@@ -29,6 +29,9 @@ Install the dependencies:
     poetry install
 ```
 
+If running under WSL, make sure that some kind of X window server is
+running, for example VcXsrv with the 'Disable access control' option.
+
 Run the tests:
 ```
     poetry run pytest
@@ -40,7 +43,6 @@ Run the script:
     poetry run python gold.py
 ```
 
-First the command line will display
-the gold bar price difference expressed in roubles and percent.
-
-Then you will see a line graph of the gold bar price difference.
+The application will output the gold bar price difference (in rubles)
+to the terminal. A line graph will be also displayed, if window subsystem
+is available.
