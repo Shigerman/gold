@@ -1,5 +1,7 @@
 # Gold
 
+![logo](https://github.com/Shigerman/gold/raw/master/gold.jpg)
+
 The script receives the current price of a 10-gram gold bar from the bank site
 and compares it to the purchase price in 2018.
 
